@@ -142,6 +142,8 @@
   .empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;line-height:1.65}
   .warnbar{background:#FFF1D9;border-radius:16px;padding:10px 13px;font-size:12.5px;font-weight:700;margin-bottom:11px;display:none;color:#8A6420}
   .warnbar.on{display:block}
+  #pin{width:100%;padding:15px;border-radius:14px;border:2px solid var(--line);font-size:19px;font-weight:700;text-align:center;letter-spacing:.35em;font-family:var(--mono);background:#FBFAFF;color:var(--ink)}
+  #pin:focus{outline:none;border-color:var(--primary)}
 </style>
 </head>
 <body>
@@ -162,7 +164,7 @@
   <!-- 시작 -->
   <section class="view" id="v-home">
     <span class="eyebrow">연구부장의 역할 · 연간 업무 흐름</span>
-    <h1>1년치 업무를<br>제자리에 올려놓기</h1>
+    <h1 id="brand">1년치 업무를<br>제자리에 올려놓기</h1>
     <p class="lede">업무 카드 22장을 월별 칸으로 옮기세요. 모둠원이 각자 기기로 같은 판에 함께 배치합니다.</p>
     <h2>연수 시간</h2>
     <div class="opts" id="sess"></div>
@@ -170,7 +172,18 @@
     <div class="teams" id="teams"></div>
     <button class="go" id="enter" disabled>모둠 판 들어가기</button>
     <p class="note">모둠원 모두 같은 시간·같은 모둠을 고르면 한 판에서 만납니다.</p>
-    <a class="link" href="#" id="toDash">강사용 대시보드 열기</a>
+  </section>
+
+  <!-- 강사 확인 -->
+  <section class="view" id="v-gate">
+    <span class="eyebrow">강사용</span>
+    <h1 style="font-size:22px">접속 코드 입력</h1>
+    <div class="panel">
+      <input id="pin" inputmode="numeric" autocomplete="off" placeholder="코드">
+      <p class="note" id="pin-msg">모둠 참가자 화면에는 이 입구가 나타나지 않습니다.</p>
+    </div>
+    <button class="go" id="pin-ok">대시보드 열기</button>
+    <button class="ghostbtn" id="pin-back">시작 화면으로</button>
   </section>
 
   <!-- 대기 -->
@@ -214,8 +227,8 @@
     </div>
     <h2>다시 볼 카드</h2>
     <div id="r-review"></div>
-    <button class="go" id="toDash2">전체 순위 보기</button>
-    <button class="ghostbtn" id="again">처음으로</button>
+    <p class="note" style="text-align:center">제출이 끝났습니다. 전체 순위는 강사 화면에서 함께 봅니다.</p>
+    <button class="go" id="again">처음으로</button>
   </section>
 
   <!-- 대시보드 -->
@@ -249,6 +262,9 @@ const FIREBASE = {
   databaseURL: "https://yeusu-75fd7-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId:   "yeusu-75fd7"
 };
+
+/* 강사용 접속 코드 — 원하는 값으로 바꾸세요 */
+const TEACHER_PIN = "2026";
 /* ════════════════════════════════════════════════════ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -330,7 +346,7 @@ const ME="d"+Math.random().toString(36).slice(2,9);
 const S={sid:null,team:null,started:0,submitted:false,placed:{},members:{},sent:false};
 let offRoom=null, offRes=null, clockId=null;
 
-function show(v){["v-setup","v-home","v-wait","v-play","v-done","v-dash"]
+function show(v){["v-setup","v-gate","v-home","v-wait","v-play","v-done","v-dash"]
   .forEach(x=>$(x).classList.toggle("is-on",x===v)); window.scrollTo(0,0);}
 const sesName=id=>{const s=SESSIONS.find(x=>x.id===id);return s?s.d+" "+s.p:id;};
 const mmss=n=>Math.floor(n/60)+":"+("0"+(n%60)).slice(-2);
@@ -340,7 +356,8 @@ const memberIds=()=>Object.keys(S.members).sort((a,b)=>(S.members[a].first||0)-(
 const colorOf=id=>PAL[Math.max(0,memberIds().indexOf(id))%PAL.length];
 const idxOf=id=>memberIds().indexOf(id)+1;
 
-show(live?"v-home":"v-setup");
+const wantsTeacher=/(^|[?&#])teacher/i.test(location.hash+location.search);
+if(wantsTeacher) gate(); else show(live?"v-home":"v-setup");
 $("solo").onclick=()=>{ show("v-home"); $("warn").textContent="미리보기 모드입니다. 모둠원 동기화와 대시보드 집계는 작동하지 않습니다."; $("warn").classList.add("on"); };
 
 /* ── 시작 화면 ── */
@@ -567,8 +584,20 @@ function openDash(){
   if(S.sid&&S.sid!=="s0") dSid=S.sid;
   tabs(); show("v-dash"); watch();
 }
-$("toDash").onclick=e=>{e.preventDefault();openDash();};
-$("toDash2").onclick=openDash;
+function gate(){ show("v-gate"); setTimeout(()=>{const p=$("pin"); if(p) p.focus();},120); }
+$("pin-ok").onclick=()=>{
+  const v=$("pin").value.trim();
+  if(v===String(TEACHER_PIN)){ $("pin").value=""; $("pin-msg").style.color=""; 
+    $("pin-msg").textContent="모둠 참가자 화면에는 이 입구가 나타나지 않습니다."; openDash(); }
+  else{ $("pin-msg").textContent="코드가 맞지 않습니다."; $("pin-msg").style.color="var(--hot)"; }
+};
+$("pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("pin-ok").click(); });
+$("pin-back").onclick=()=>show(live?"v-home":"v-setup");
+{ /* 제목을 2초간 누르고 있어도 강사 입구가 열립니다 */
+  let lp=null; const bd=$("brand");
+  bd.addEventListener("pointerdown",()=>{ lp=setTimeout(gate,2000); });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>bd.addEventListener(ev,()=>clearTimeout(lp)));
+}
 $("d-back").onclick=()=>{ if(offRes)offRes(); show("v-home"); };
 $("d-reset").onclick=()=>{
   if(!live) return;
