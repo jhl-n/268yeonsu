@@ -184,10 +184,10 @@
   .rank .t{font-size:13px;font-weight:700;letter-spacing:-.01em;flex:1;line-height:1.3}
   .rank .gap{font-family:var(--mono);font-size:11px;font-weight:700;flex:none;opacity:.8}
   .up{color:#1E7A5C} .down{color:#C15A32}
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .split{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .split div{border-radius:15px;padding:12px 9px;text-align:center}
   .split .n{font-family:var(--mono);font-size:22px;font-weight:700}
-  .split .k{font-size:11.5px;font-weight:800;margin-top:2px}
+  .split .k{font-size:11px;font-weight:800;margin-top:2px}
   .who-list{display:flex;flex-wrap:wrap;gap:6px}
   .who-list span{border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}
 </style>
@@ -206,7 +206,7 @@
   <section class="view is-on" id="v-home">
     <span class="eyebrow">연구부장의 역할 · 시간표 작성</span>
     <h1 id="brand">당신의 시간표는<br>누구 편입니까</h1>
-    <p class="lede">16가지 고려사항을 둘씩 견주어 봅니다. 순위를 매기지 마세요. 더 중요한 쪽을 고르다 보면 성향은 자동으로 드러납니다.</p>
+    <p class="lede">12가지 고려사항을 둘씩 견주어 봅니다. 순위를 매기지 마세요. 더 중요한 쪽을 고르다 보면 성향은 자동으로 드러납니다.</p>
     <h2>연수 시간</h2>
     <div class="opts" id="sess"></div>
     <h2>별명</h2>
@@ -215,7 +215,7 @@
       <p class="note">이름 대신 쓰입니다. 결과 화면에서 본인을 찾을 때만 필요하니 편하게 지으세요.</p>
     </div>
     <button class="go" id="start" disabled>검사 시작</button>
-    <p class="note">약 45번 고르면 끝납니다. 2분 남짓 걸립니다.</p>
+    <p class="note">약 30번 고르면 끝납니다. 1분 30초쯤 걸립니다.</p>
   </section>
 
   <section class="view" id="v-gate">
@@ -252,7 +252,7 @@
       <div class="d" id="r-desc">–</div>
     </div>
     <div class="miss"><div class="k">이 유형이 놓치기 쉬운 것</div><div class="v" id="r-miss">–</div></div>
-    <h2>네 가지 성향의 세기</h2>
+    <h2>세 성향의 세기</h2>
     <div class="panel" id="r-bars"></div>
     <h2>내가 매긴 우선순위</h2>
     <div id="r-rank"></div>
@@ -310,39 +310,32 @@ const SESSIONS=[
 ];
 
 const TYPES={
-  A:{n:"공간 사수형", q:"일단 자리부터 잡습니다", c:"#DCE7FF", b:"#4E8FD6",
-     d:"한정된 공간을 먼저 잠가야 나머지가 풀린다고 봅니다. 체육관과 특별실부터 정리하고 그 위에 나머지를 얹는 방식이라, 시간표가 빠르게 완성되는 편입니다.",
-     m:"칸은 다 찼는데 정작 아이의 하루가 이상해질 수 있습니다. 완성된 뒤 한 학급의 월요일을 세로로 읽어보세요."},
-  B:{n:"저울 수호형", q:"한 명도 손해 보면 안 됩니다", c:"#EFE0FF", b:"#8B6ED1",
-     d:"누가 더 급한지보다 고르게 나눴는지를 먼저 봅니다. 나중에 형평성 문제로 되돌아올 일이 가장 적은 유형입니다.",
-     m:"모두에게 공평한 시간표가 누구에게도 편하지 않을 수 있습니다. 균등이 목적이 되지 않았는지 한 번 점검해 보세요."},
-  C:{n:"아이 편 유형", q:"아이 하루부터 그립니다", c:"#FFE3D2", b:"#E88A62",
+  A:{n:"공간 편", q:"칸부터 잠급니다", c:"#DCE7FF", b:"#4E8FD6",
+     d:"한정된 공간을 먼저 확보해야 나머지가 풀린다고 봅니다. 체육관과 특별실부터 정리하고 그 위에 나머지를 얹는 방식이라, 시간표가 가장 빨리 완성됩니다.",
+     m:"칸은 다 찼는데 정작 아이의 하루가 이상해질 수 있습니다. 완성한 뒤 한 학급의 월요일을 세로로 읽어보세요."},
+  B:{n:"아이 편", q:"아이 하루부터 그립니다", c:"#FFE3D2", b:"#E88A62",
      d:"아이의 컨디션과 하루 흐름이 판단 기준입니다. 교육적으로 가장 설명하기 좋은 시간표가 나옵니다.",
      m:"교사의 부담이 특정 사람에게 쏠려도 눈에 잘 띄지 않습니다. 교사별로 가로줄을 한 번 읽어보세요."},
-  D:{n:"숨통 확보형", q:"선생님도 사람입니다", c:"#D3EFE6", b:"#3FA98A",
+  C:{n:"교사 편", q:"선생님도 사람입니다", c:"#D3EFE6", b:"#3FA98A",
      d:"가르치는 사람이 감당할 조건을 먼저 챙깁니다. 학기 중에 불만이 가장 적게 올라오는 유형입니다.",
      m:"배려가 쌓이다 보면 정작 수업 자체의 배치가 어그러질 수 있습니다. 아이 기준으로 한 번 더 보세요."}
 };
 
 const ITEMS=[
-  {id:"a1",g:"A",t:"체육관 배분",        s:"학년·학급 간 체육관 시수를 고르게"},
-  {id:"a2",g:"A",t:"운동장 배분",        s:"체육 수업 겹침과 우천 시 대체 공간"},
-  {id:"a3",g:"A",t:"과학실 배분",        s:"실험 차시가 몰리는 학년을 먼저"},
-  {id:"a4",g:"A",t:"기타 특별실 배분",    s:"음악실·컴퓨터실·시청각실 등"},
-  {id:"b1",g:"B",t:"학년 균등 배분",      s:"어느 학년도 불리하지 않게"},
-  {id:"b2",g:"B",t:"전담 교과 요일 편중 방지", s:"한 교과가 특정 요일에 몰리지 않게"},
-  {id:"b3",g:"B",t:"담임 요일별 공강 수 형평",    s:"요일마다 공강이 한쪽으로 몰리지 않게"},
-  {id:"b4",g:"B",t:"전년도 시간표 형평성",  s:"작년에 불리했던 학년을 먼저 배려"},
-  {id:"c1",g:"C",t:"고학년 우선 배정",     s:"교과 시수와 전담이 많은 학년부터"},
-  {id:"c2",g:"C",t:"저학년 우선 배정",     s:"집중 시간이 짧은 학년부터"},
-  {id:"c3",g:"C",t:"체육 직후 교시 배려",   s:"격한 활동 다음 시간의 수업을 고려"},
-  {id:"c4",g:"C",t:"오전 주요교과 배치",    s:"국어·수학을 집중이 잘 되는 시간에"},
-  {id:"d1",g:"D",t:"동학년 협의 시간 확보",  s:"같은 학년 담임의 공강을 맞추기"},
-  {id:"d2",g:"D",t:"전담교사 이동 동선",    s:"연속 수업과 교실 이동 최소화"},
-  {id:"d3",g:"D",t:"변경 요청 대비 여유 칸", s:"학기 중 조정이 가능하도록"},
-  {id:"d4",g:"D",t:"담임 연속 수업 부담 분산", s:"한 사람에게 연강이 몰리지 않게"}
+  {id:"a1",g:"A",t:"체육관 배분",           s:"학년·학급 간 체육관 시수를 고르게"},
+  {id:"a2",g:"A",t:"운동장 배분",           s:"체육 수업 겹침과 우천 시 대체 공간"},
+  {id:"a3",g:"A",t:"과학실 배분",           s:"실험 차시가 몰리는 학년을 먼저"},
+  {id:"a4",g:"A",t:"기타 특별실 배분",       s:"음악실·컴퓨터실·시청각실 등"},
+  {id:"b1",g:"B",t:"고학년 우선 배정",       s:"교과 시수와 전담이 많은 학년부터"},
+  {id:"b2",g:"B",t:"저학년 우선 배정",       s:"집중 시간이 짧은 학년부터"},
+  {id:"b3",g:"B",t:"학년 균등 배분",         s:"어느 학년도 불리하지 않게"},
+  {id:"b4",g:"B",t:"체육 직후 교시 배려",     s:"격한 활동 다음 시간의 수업을 고려"},
+  {id:"c1",g:"C",t:"전담 교과 요일 편중 방지", s:"한 교과가 특정 요일에 몰리지 않게"},
+  {id:"c2",g:"C",t:"담임 요일별 공강 수 형평", s:"요일마다 공강이 한쪽으로 몰리지 않게"},
+  {id:"c3",g:"C",t:"부장교사 업무 시간 배려",  s:"보직교사의 공강을 업무 처리가 가능하게"},
+  {id:"c4",g:"C",t:"변경 요청 대비 여유 칸",   s:"학기 중 조정이 가능하도록"}
 ];
-const N=ITEMS.length, EST=45;
+const N=ITEMS.length, EST=30;
 
 let db=null, live=false;
 try{ if(FIREBASE.databaseURL&&FIREBASE.databaseURL.startsWith("http")){ db=getDatabase(initializeApp(FIREBASE)); live=true; } }catch(e){}
@@ -424,10 +417,10 @@ async function msort(arr){
 /* ── 점수 ── */
 function scores(order){
   const s={};
-  ["A","B","C","D"].forEach(g=>{
+  ["A","B","C"].forEach(g=>{
     const rs=ITEMS.filter(x=>x.g===g).map(x=>order.indexOf(x.id)+1);
     const avg=rs.reduce((a,b)=>a+b,0)/rs.length;
-    s[g]=Math.round((14.5-avg)/12*100);
+    s[g]=Math.round((10.5-avg)/8*100);
   });
   return s;
 }
@@ -436,7 +429,7 @@ function scores(order){
 function finish(order){
   myRank=order; $("p-bar").style.width="100%";
   const sc=scores(order);
-  const sorted=["A","B","C","D"].sort((a,b)=>sc[b]-sc[a]);
+  const sorted=["A","B","C"].sort((a,b)=>sc[b]-sc[a]);
   const top=sorted[0], T=TYPES[top];
 
   $("r-badge").style.background=T.c;
@@ -521,7 +514,7 @@ function watch(){
 }
 function draw(rows){
   $("d-n").textContent=rows.length;
-  $("d-split").innerHTML=["A","B","C","D"].map(g=>{
+  $("d-split").innerHTML=["A","B","C"].map(g=>{
     const n=rows.filter(r=>r.type===g).length;
     return `<div style="background:${TYPES[g].c}"><div class="n">${n}</div><div class="k">${TYPES[g].n}</div></div>`;
   }).join("");
