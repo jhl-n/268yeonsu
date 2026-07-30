@@ -1,0 +1,556 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light only">
+<title>당신의 시간표는 누구 편입니까</title>
+<style>
+  :root{
+    --bg:#F6F4FB; --ink:#3B3652; --muted:#7C7695; --line:#E9E4F5;
+    --card:#FFFFFF; --primary:#6C5CE0; --soft:#EDE9FF;
+    --good:#2FA37C; --hot:#E8845C;
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sh:0 3px 14px rgba(72,58,130,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;overscroll-behavior:none}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.45;-webkit-text-size-adjust:100%}
+  #app{max-width:1120px;margin:0 auto;padding:14px 13px 36px}
+  .view{display:none} .view.is-on{display:block}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+
+  h1{font-size:25px;font-weight:800;letter-spacing:-.035em;margin:16px 0 6px;line-height:1.22}
+  h2{font-size:15px;font-weight:800;letter-spacing:-.01em;margin:22px 0 9px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;color:var(--primary)}
+  .lede{color:var(--muted);font-size:13.5px;margin:0}
+  .note{font-size:12px;color:var(--muted);margin-top:11px;line-height:1.6}
+
+  .panel{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh)}
+  .panel+.panel{margin-top:11px}
+
+  .opts{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+  .opt{text-align:left;background:var(--card);border-radius:16px;padding:12px 14px;font-weight:700;font-size:14px;box-shadow:var(--sh);transition:.14s}
+  .opt small{display:block;font-weight:600;font-size:11.5px;color:var(--muted)}
+  .opt[aria-pressed="true"]{background:var(--primary);color:#fff;transform:translateY(-1px)}
+  .opt[aria-pressed="true"] small{color:#D5CDFF}
+  .teams{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .teams .opt{text-align:center;padding:14px 4px;font-size:15px}
+
+  .go{display:block;width:100%;margin-top:14px;padding:16px;border-radius:999px;background:var(--primary);color:#fff;font-weight:800;font-size:16px;letter-spacing:-.01em;box-shadow:0 6px 16px rgba(108,92,224,.32)}
+  .go:active{transform:translateY(2px)}
+  .go[disabled]{background:#D6D1E8;box-shadow:none;color:#fff}
+  .ghostbtn{display:block;width:100%;margin-top:9px;padding:12px;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--muted);background:var(--card);box-shadow:var(--sh)}
+  .link{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+  /* 헤더 */
+  .hud{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:20px;padding:10px 14px;box-shadow:var(--sh)}
+  .hud .who{font-weight:800;font-size:14px;letter-spacing:-.02em;flex:none}
+  .hud .who i{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .dots{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+  .dot{width:15px;height:15px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;display:grid;place-items:center}
+  .clock{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;flex:none}
+  .clock.warn{color:var(--hot)}
+  .prog{height:8px;background:#E9E4F5;border-radius:999px;margin:9px 2px 0;overflow:hidden}
+  .prog i{display:block;height:100%;background:var(--primary);border-radius:999px;width:0;transition:width .3s}
+  .cnt{font-size:11.5px;color:var(--muted);font-weight:700;margin:6px 4px 0;display:flex;justify-content:space-between}
+
+  /* 카드 트레이 */
+  .tray{margin-top:11px;background:#EFEBFA;border-radius:20px;padding:10px 10px 12px;min-height:104px}
+  .tray.over{background:#E2DBFA}
+  .tray-l{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.06em;margin:0 4px 8px}
+  .strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+  .strip::-webkit-scrollbar{height:5px}
+  .strip::-webkit-scrollbar-thumb{background:#CFC6EC;border-radius:9px}
+  .tcard{
+    flex:none;width:152px;background:var(--card);border-radius:15px;padding:10px 11px;
+    box-shadow:0 2px 8px rgba(72,58,130,.1);touch-action:pan-x;user-select:none;-webkit-user-select:none;
+  }
+  .tcard .t{font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1.28}
+  .tcard .s{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.3}
+  .tcard.sel{outline:3px solid var(--primary);outline-offset:1px}
+  .tray-done{font-size:12.5px;color:var(--muted);font-weight:700;padding:16px 6px;text-align:center}
+
+  /* 보드 */
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+  @media(min-width:700px){.board{grid-template-columns:repeat(4,1fr)}}
+  .lane{border-radius:18px;padding:8px 9px 9px;min-height:78px;transition:.12s;position:relative}
+  .lane.over{transform:scale(1.03);box-shadow:0 0 0 3px var(--primary)}
+  .lane-h{font-size:12.5px;font-weight:800;letter-spacing:-.02em;opacity:.72;margin-bottom:6px;display:flex;justify-content:space-between}
+  .lane-h b{font-family:var(--mono);font-weight:700;font-size:11px;opacity:.6}
+  .chip{
+    display:flex;align-items:center;gap:5px;width:100%;text-align:left;background:rgba(255,255,255,.86);
+    border-radius:11px;padding:6px 8px;font-size:11.5px;font-weight:700;letter-spacing:-.01em;
+    margin-bottom:4px;touch-action:none;user-select:none;-webkit-user-select:none;
+    animation:pop .28s cubic-bezier(.2,1.3,.4,1);line-height:1.25;
+  }
+  .chip u{width:7px;height:7px;border-radius:50%;flex:none;text-decoration:none}
+  @keyframes pop{from{transform:scale(1.18);opacity:.3}to{transform:scale(1);opacity:1}}
+  .lane-e{font-size:11px;opacity:.45;font-weight:700;padding:4px 2px}
+
+  #ghost{position:fixed;z-index:99;pointer-events:none;display:none;width:158px;background:#fff;border-radius:15px;padding:10px 11px;box-shadow:0 12px 28px rgba(60,45,120,.3);transform:rotate(-3deg) scale(1.04);font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1.28}
+  #ghost.on{display:block}
+
+  .hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
+  .sync{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+  .sync.bad{color:var(--hot);font-weight:700}
+
+  /* 결과 */
+  .score{background:linear-gradient(140deg,#7A69E6,#A79BF2);color:#fff;border-radius:24px;padding:22px;text-align:center;box-shadow:0 10px 26px rgba(108,92,224,.3)}
+  .score .l{font-size:11px;letter-spacing:.2em;font-weight:800;opacity:.82}
+  .score .n{font-family:var(--mono);font-size:52px;font-weight:700;letter-spacing:-.045em;line-height:1.06;margin-top:4px}
+  .score .d{font-size:13px;opacity:.92;margin-top:7px}
+  .rev{background:var(--card);border-radius:16px;padding:12px 13px;margin-bottom:8px;box-shadow:var(--sh)}
+  .rev-h{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .tag{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px}
+  .tag.x{background:#FFE1D8;color:#C15A32} .tag.n{background:#EDEAF6;color:var(--muted)}
+  .rev-t{font-weight:800;font-size:13.5px;letter-spacing:-.02em}
+  .rev-w{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  /* 대시보드 */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}
+  @media(min-width:720px){.tabs{grid-template-columns:repeat(4,1fr)}}
+  .tab{background:var(--card);border-radius:15px;padding:10px 6px;font-weight:800;font-size:13px;text-align:center;box-shadow:var(--sh)}
+  .tab small{display:block;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .tab[aria-pressed="true"]{background:var(--primary);color:#fff}
+  .tab[aria-pressed="true"] small{color:#D5CDFF}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px}
+  .stat{background:var(--card);border-radius:16px;padding:11px 12px;box-shadow:var(--sh)}
+  .stat .k{font-size:10px;letter-spacing:.1em;color:var(--muted);font-weight:800}
+  .stat .v{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.03em}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.08em;color:var(--muted);padding:0 6px 7px;font-weight:800}
+  td{padding:9px 6px;border-top:1px solid var(--line);font-weight:600}
+  td.rank{font-family:var(--mono);font-weight:800;width:32px;color:var(--muted)}
+  tr.top td{background:#F4F1FF} tr.top td.rank{color:var(--primary);font-size:16px}
+  td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  .miss{padding:11px 0;border-top:1px solid var(--line)}
+  .miss:first-child{border-top:none}
+  .miss-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .miss-t{font-weight:800;font-size:13px;letter-spacing:-.02em}
+  .miss-p{font-family:var(--mono);font-size:12.5px;font-weight:700;flex:none;color:var(--hot)}
+  .meter{height:7px;background:#EDEAF6;border-radius:999px;margin-top:7px;overflow:hidden}
+  .meter i{display:block;height:100%;background:#F0A184;border-radius:999px}
+  .miss-w{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .row button{flex:1;background:var(--card);border-radius:999px;padding:12px;font-weight:700;font-size:13px;box-shadow:var(--sh)}
+  .row button.danger{color:#C15A32}
+  .empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;line-height:1.65}
+  .warnbar{background:#FFF1D9;border-radius:16px;padding:10px 13px;font-size:12.5px;font-weight:700;margin-bottom:11px;display:none;color:#8A6420}
+  .warnbar.on{display:block}
+  #pin{width:100%;padding:15px;border-radius:14px;border:2px solid var(--line);font-size:19px;font-weight:700;text-align:center;letter-spacing:.35em;font-family:var(--mono);background:#FBFAFF;color:var(--ink)}
+  #pin:focus{outline:none;border-color:var(--primary)}
+</style>
+<style>
+  .vs{display:grid;gap:10px;margin-top:14px}
+  @media(min-width:760px){.vs{grid-template-columns:1fr auto 1fr;align-items:stretch}}
+  .pick{background:var(--card);border-radius:20px;padding:18px 16px;text-align:left;
+    box-shadow:var(--sh);transition:.14s;min-height:116px}
+  .pick .t{font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1.26}
+  .pick .s{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .pick:active{transform:scale(.975)}
+  .pick.win{outline:3px solid var(--primary);transform:scale(1.02)}
+  .pick.lose{opacity:.32}
+  .mid{display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);padding:2px}
+  .qq{font-size:15px;font-weight:800;letter-spacing:-.02em;text-align:center;margin-top:16px}
+  .qq b{color:var(--primary)}
+  .kbd{font-size:11.5px;color:var(--muted);text-align:center;margin-top:13px;line-height:1.5}
+  #nick{width:100%;padding:14px;border-radius:14px;border:2px solid var(--line);font-size:16px;
+    font-weight:700;text-align:center;background:#FBFAFF;color:var(--ink)}
+  #nick:focus{outline:none;border-color:var(--primary)}
+
+  .badge{border-radius:24px;padding:24px 20px;text-align:center;box-shadow:var(--sh)}
+  .badge .l{font-size:11px;letter-spacing:.2em;font-weight:800;opacity:.6}
+  .badge .n{font-size:31px;font-weight:800;letter-spacing:-.045em;margin:8px 0 2px;line-height:1.15}
+  .badge .q{font-size:14px;font-weight:700;opacity:.72}
+  .badge .d{font-size:13.5px;margin-top:12px;line-height:1.55;opacity:.85}
+  .miss{background:var(--card);border-radius:18px;padding:15px 16px;margin-top:10px;box-shadow:var(--sh)}
+  .miss .k{font-size:11px;letter-spacing:.14em;font-weight:800;color:var(--hot)}
+  .miss .v{font-size:13.5px;font-weight:700;margin-top:6px;line-height:1.5}
+
+  .barrow{padding:10px 0;border-top:1px solid var(--line)}
+  .barrow:first-child{border-top:none}
+  .barrow .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .barrow .t{font-size:13px;font-weight:800;letter-spacing:-.01em}
+  .barrow .v{font-family:var(--mono);font-size:12.5px;font-weight:700;flex:none;color:var(--muted)}
+  .barrow .m{height:9px;background:#EDEAF6;border-radius:999px;margin-top:7px;overflow:hidden}
+  .barrow .m i{display:block;height:100%;border-radius:999px;transition:width .5s}
+  .rank{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:13px;margin-bottom:5px}
+  .rank .no{font-family:var(--mono);font-size:12.5px;font-weight:700;width:20px;opacity:.55;flex:none}
+  .rank .t{font-size:13px;font-weight:700;letter-spacing:-.01em;flex:1;line-height:1.3}
+  .rank .gap{font-family:var(--mono);font-size:11px;font-weight:700;flex:none;opacity:.8}
+  .up{color:#1E7A5C} .down{color:#C15A32}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .split div{border-radius:15px;padding:12px 9px;text-align:center}
+  .split .n{font-family:var(--mono);font-size:22px;font-weight:700}
+  .split .k{font-size:11.5px;font-weight:800;margin-top:2px}
+  .who-list{display:flex;flex-wrap:wrap;gap:6px}
+  .who-list span{border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="warnbar" id="warn"></div>
+
+  <section class="view" id="v-setup">
+    <span class="eyebrow">설정 필요</span>
+    <h1>Firebase 연결 정보를<br>아직 넣지 않았습니다</h1>
+    <div class="panel"><p class="lede">이 파일 위쪽 <b>FIREBASE 설정</b>에 index.html과 <b>똑같은 값</b>을 넣으세요.</p></div>
+    <button class="go" id="solo">혼자 미리보기로 실행</button>
+  </section>
+
+  <section class="view is-on" id="v-home">
+    <span class="eyebrow">연구부장의 역할 · 시간표 작성</span>
+    <h1 id="brand">당신의 시간표는<br>누구 편입니까</h1>
+    <p class="lede">16가지 고려사항을 둘씩 견주어 봅니다. 순위를 매기지 마세요. 더 중요한 쪽을 고르다 보면 성향은 자동으로 드러납니다.</p>
+    <h2>연수 시간</h2>
+    <div class="opts" id="sess"></div>
+    <h2>별명</h2>
+    <div class="panel" style="padding:13px">
+      <input id="nick" maxlength="8" autocomplete="off" placeholder="예: 봄바람">
+      <p class="note">이름 대신 쓰입니다. 결과 화면에서 본인을 찾을 때만 필요하니 편하게 지으세요.</p>
+    </div>
+    <button class="go" id="start" disabled>검사 시작</button>
+    <p class="note">약 45번 고르면 끝납니다. 2분 남짓 걸립니다.</p>
+  </section>
+
+  <section class="view" id="v-gate">
+    <span class="eyebrow">강사용</span>
+    <h1 style="font-size:22px">접속 코드 입력</h1>
+    <div class="panel">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="••••">
+      <p class="note" id="pin-msg">참가자 화면에는 이 입구가 나타나지 않습니다.</p>
+    </div>
+    <button class="go" id="pin-ok">집계 보기</button>
+    <button class="ghostbtn" id="pin-back">시작 화면으로</button>
+  </section>
+
+  <section class="view" id="v-play">
+    <div class="hud">
+      <div class="who" id="p-nick">–<i id="p-ses">–</i></div>
+      <div class="clock" id="p-n" style="font-size:19px">1</div>
+    </div>
+    <div class="prog"><i id="p-bar"></i></div>
+    <p class="qq">둘 중 <b>하나만</b> 지킬 수 있다면?</p>
+    <div class="vs">
+      <button class="pick" id="pa"><div class="t">–</div><div class="s">–</div></button>
+      <div class="mid">vs</div>
+      <button class="pick" id="pb"><div class="t">–</div><div class="s">–</div></button>
+    </div>
+    <p class="kbd">고민되면 직관으로 고르세요. 한 번의 선택이 결과를 뒤집지는 않습니다.</p>
+  </section>
+
+  <section class="view" id="v-done">
+    <div class="badge" id="r-badge">
+      <div class="l">나의 시간표 성향</div>
+      <div class="n" id="r-type">–</div>
+      <div class="q" id="r-quote">–</div>
+      <div class="d" id="r-desc">–</div>
+    </div>
+    <div class="miss"><div class="k">이 유형이 놓치기 쉬운 것</div><div class="v" id="r-miss">–</div></div>
+    <h2>네 가지 성향의 세기</h2>
+    <div class="panel" id="r-bars"></div>
+    <h2>내가 매긴 우선순위</h2>
+    <div id="r-rank"></div>
+    <h2>분반과 비교</h2>
+    <p class="lede" id="r-cmp">–</p>
+    <div id="r-diff" style="margin-top:10px"></div>
+    <button class="go" id="again">다시 하기</button>
+  </section>
+
+  <section class="view" id="v-dash">
+    <span class="eyebrow">강사용 · 실시간</span>
+    <h1 style="font-size:21px">시간표 성향 집계</h1>
+    <div class="tabs" id="dtabs"></div>
+    <div class="stats">
+      <div class="stat"><div class="k">응답</div><div class="v" id="d-n">0</div></div>
+      <div class="stat"><div class="k">1순위 최다</div><div class="v" id="d-top" style="font-size:12.5px;font-family:var(--sans);font-weight:800;line-height:1.3">–</div></div>
+      <div class="stat"><div class="k">가장 갈린 항목</div><div class="v" id="d-var" style="font-size:12.5px;font-family:var(--sans);font-weight:800;line-height:1.3">–</div></div>
+    </div>
+    <div class="panel"><h2 style="margin-top:0">성향 분포</h2><div class="split" id="d-split"></div>
+      <div id="d-who" style="margin-top:12px"></div></div>
+    <div class="panel"><h2 style="margin-top:0">항목별 평균 순위</h2><div id="d-bars"></div>
+      <p class="note">막대가 길수록 앞순위입니다.</p></div>
+    <div class="row">
+      <button id="d-back">시작 화면</button>
+      <button class="danger" id="d-reset">이 분반 응답 삭제</button>
+    </div>
+    <p class="note" id="d-stamp">응답이 들어오는 즉시 갱신됩니다.</p>
+  </section>
+</div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════
+   FIREBASE 설정 — index.html 과 똑같은 값을 넣으세요
+   ══════════════════════════════════════════════════════ */
+const FIREBASE = {
+  apiKey:      "AIzaSyCiD-3-FdSyXwtgahuHiaUDYgum8uzuJG8",
+  databaseURL: "https://yeusu-75fd7-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:   "yeusu-75fd7"
+};
+
+/* 강사용 접속 코드 */
+const TEACHER_PIN = "2026";
+/* ════════════════════════════════════════════════════ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const SESSIONS=[
+  {id:"s1",d:"8월 4일",p:"4-5교시"},
+  {id:"s2",d:"8월 4일",p:"6-7교시"},
+  {id:"s3",d:"8월 11일",p:"4-5교시"},
+  {id:"s4",d:"8월 11일",p:"6-7교시"},
+  {id:"s0",d:"연습",p:"기록 안 함"}
+];
+
+const TYPES={
+  A:{n:"공간 사수형", q:"일단 자리부터 잡습니다", c:"#DCE7FF", b:"#4E8FD6",
+     d:"한정된 공간을 먼저 잠가야 나머지가 풀린다고 봅니다. 체육관과 특별실부터 정리하고 그 위에 나머지를 얹는 방식이라, 시간표가 빠르게 완성되는 편입니다.",
+     m:"칸은 다 찼는데 정작 아이의 하루가 이상해질 수 있습니다. 완성된 뒤 한 학급의 월요일을 세로로 읽어보세요."},
+  B:{n:"저울 수호형", q:"한 명도 손해 보면 안 됩니다", c:"#EFE0FF", b:"#8B6ED1",
+     d:"누가 더 급한지보다 고르게 나눴는지를 먼저 봅니다. 나중에 형평성 문제로 되돌아올 일이 가장 적은 유형입니다.",
+     m:"모두에게 공평한 시간표가 누구에게도 편하지 않을 수 있습니다. 균등이 목적이 되지 않았는지 한 번 점검해 보세요."},
+  C:{n:"아이 편 유형", q:"아이 하루부터 그립니다", c:"#FFE3D2", b:"#E88A62",
+     d:"아이의 컨디션과 하루 흐름이 판단 기준입니다. 교육적으로 가장 설명하기 좋은 시간표가 나옵니다.",
+     m:"교사의 부담이 특정 사람에게 쏠려도 눈에 잘 띄지 않습니다. 교사별로 가로줄을 한 번 읽어보세요."},
+  D:{n:"숨통 확보형", q:"선생님도 사람입니다", c:"#D3EFE6", b:"#3FA98A",
+     d:"가르치는 사람이 감당할 조건을 먼저 챙깁니다. 학기 중에 불만이 가장 적게 올라오는 유형입니다.",
+     m:"배려가 쌓이다 보면 정작 수업 자체의 배치가 어그러질 수 있습니다. 아이 기준으로 한 번 더 보세요."}
+};
+
+const ITEMS=[
+  {id:"a1",g:"A",t:"체육관 배분",        s:"학년·학급 간 체육관 시수를 고르게"},
+  {id:"a2",g:"A",t:"운동장 배분",        s:"체육 수업 겹침과 우천 시 대체 공간"},
+  {id:"a3",g:"A",t:"과학실 배분",        s:"실험 차시가 몰리는 학년을 먼저"},
+  {id:"a4",g:"A",t:"기타 특별실 배분",    s:"음악실·컴퓨터실·시청각실 등"},
+  {id:"b1",g:"B",t:"학년 균등 배분",      s:"어느 학년도 불리하지 않게"},
+  {id:"b2",g:"B",t:"전담 교과 요일 편중 방지", s:"한 교과가 특정 요일에 몰리지 않게"},
+  {id:"b3",g:"B",t:"담임 요일별 공강 수 형평",    s:"요일마다 공강이 한쪽으로 몰리지 않게"},
+  {id:"b4",g:"B",t:"전년도 시간표 형평성",  s:"작년에 불리했던 학년을 먼저 배려"},
+  {id:"c1",g:"C",t:"고학년 우선 배정",     s:"교과 시수와 전담이 많은 학년부터"},
+  {id:"c2",g:"C",t:"저학년 우선 배정",     s:"집중 시간이 짧은 학년부터"},
+  {id:"c3",g:"C",t:"체육 직후 교시 배려",   s:"격한 활동 다음 시간의 수업을 고려"},
+  {id:"c4",g:"C",t:"오전 주요교과 배치",    s:"국어·수학을 집중이 잘 되는 시간에"},
+  {id:"d1",g:"D",t:"동학년 협의 시간 확보",  s:"같은 학년 담임의 공강을 맞추기"},
+  {id:"d2",g:"D",t:"전담교사 이동 동선",    s:"연속 수업과 교실 이동 최소화"},
+  {id:"d3",g:"D",t:"변경 요청 대비 여유 칸", s:"학기 중 조정이 가능하도록"},
+  {id:"d4",g:"D",t:"담임 연속 수업 부담 분산", s:"한 사람에게 연강이 몰리지 않게"}
+];
+const N=ITEMS.length, EST=45;
+
+let db=null, live=false;
+try{ if(FIREBASE.databaseURL&&FIREBASE.databaseURL.startsWith("http")){ db=getDatabase(initializeApp(FIREBASE)); live=true; } }catch(e){}
+
+const $=i=>document.getElementById(i);
+const PID="p"+Math.random().toString(36).slice(2,9);
+const item=id=>ITEMS.find(x=>x.id===id);
+const sesName=id=>{const s=SESSIONS.find(x=>x.id===id);return s?s.d+" "+s.p:id;};
+const esc=t=>String(t).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
+function show(v){["v-setup","v-gate","v-home","v-play","v-done","v-dash"]
+  .forEach(x=>$(x).classList.toggle("is-on",x===v)); window.scrollTo(0,0);}
+
+let SID=null, NICK="", done=0, pending=null, offRes=null, cur=[], myRank=[];
+
+const wantsTeacher=/(^|[?&#])teacher/i.test(location.hash+location.search);
+if(wantsTeacher) gate(); else show(live?"v-home":"v-setup");
+$("solo").onclick=()=>{show("v-home");$("warn").textContent="미리보기 모드입니다. 집계에 반영되지 않습니다.";$("warn").classList.add("on");};
+
+{ const box=$("sess");
+  SESSIONS.forEach(s=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.setAttribute("aria-pressed","false");
+    b.innerHTML=s.d+"<small>"+s.p+"</small>";
+    b.onclick=()=>{SID=s.id;[...box.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");ready();};
+    box.appendChild(b);
+  });
+}
+$("nick").addEventListener("input",ready);
+function ready(){ $("start").disabled=!(SID&&$("nick").value.trim().length>=1); }
+
+/* ── 토너먼트 ── */
+$("start").onclick=async ()=>{
+  NICK=$("nick").value.trim().slice(0,8);
+  done=0; $("p-nick").firstChild.textContent=NICK; $("p-ses").textContent=sesName(SID);
+  show("v-play");
+  const pool=ITEMS.map(x=>x.id);
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  finish(await msort(pool));
+};
+function ask(a,b){
+  return new Promise(res=>{
+    done++; $("p-n").textContent=done;
+    $("p-bar").style.width=Math.min(96,done/EST*100)+"%";
+    paint($("pa"),item(a)); paint($("pb"),item(b));
+    $("pa").className="pick"; $("pb").className="pick";
+    pending=(win,el,other)=>{
+      el.classList.add("win"); other.classList.add("lose"); pending=null;
+      try{navigator.vibrate&&navigator.vibrate(10);}catch(e){}
+      setTimeout(()=>res(win),170);
+    };
+    $("pa").onclick=()=>pending&&pending(a,$("pa"),$("pb"));
+    $("pb").onclick=()=>pending&&pending(b,$("pb"),$("pa"));
+  });
+}
+function paint(el,it){
+  el.querySelector(".t").textContent=it.t;
+  el.querySelector(".s").textContent=it.s;
+  el.style.backgroundImage=`linear-gradient(90deg, ${TYPES[it.g].b} 0 8px, #fff 8px)`;
+}
+document.addEventListener("keydown",e=>{
+  if(!pending) return;
+  if(e.key==="ArrowLeft"||e.key==="1") pending(cur[0],$("pa"),$("pb"));
+  if(e.key==="ArrowRight"||e.key==="2") pending(cur[1],$("pb"),$("pa"));
+});
+async function msort(arr){
+  if(arr.length<2) return arr;
+  const mid=arr.length>>1;
+  const L=await msort(arr.slice(0,mid)), R=await msort(arr.slice(mid));
+  const out=[]; let i=0,j=0;
+  while(i<L.length&&j<R.length){
+    cur=[L[i],R[j]];
+    const w=await ask(L[i],R[j]);
+    if(w===L[i]) out.push(L[i++]); else out.push(R[j++]);
+  }
+  return out.concat(L.slice(i),R.slice(j));
+}
+
+/* ── 점수 ── */
+function scores(order){
+  const s={};
+  ["A","B","C","D"].forEach(g=>{
+    const rs=ITEMS.filter(x=>x.g===g).map(x=>order.indexOf(x.id)+1);
+    const avg=rs.reduce((a,b)=>a+b,0)/rs.length;
+    s[g]=Math.round((14.5-avg)/12*100);
+  });
+  return s;
+}
+
+/* ── 결과 ── */
+function finish(order){
+  myRank=order; $("p-bar").style.width="100%";
+  const sc=scores(order);
+  const sorted=["A","B","C","D"].sort((a,b)=>sc[b]-sc[a]);
+  const top=sorted[0], T=TYPES[top];
+
+  $("r-badge").style.background=T.c;
+  $("r-type").textContent=T.n;
+  $("r-quote").textContent='"'+T.q+'"';
+  $("r-desc").textContent=T.d + (sc[top]-sc[sorted[1]]<8 ? ` ${TYPES[sorted[1]].n} 성향도 비슷하게 강합니다.` : "");
+  $("r-miss").textContent=T.m;
+
+  $("r-bars").innerHTML=sorted.map(g=>
+    `<div class="barrow"><div class="h"><span class="t">${TYPES[g].n}</span>
+     <span class="v">${sc[g]}</span></div>
+     <div class="m"><i style="width:${Math.max(3,sc[g])}%;background:${TYPES[g].b}"></i></div></div>`).join("");
+
+  $("r-rank").innerHTML=order.map((id,i)=>{
+    const it=item(id);
+    return `<div class="rank" style="background:${TYPES[it.g].c}">
+      <span class="no">${i+1}</span><span class="t">${it.t}</span></div>`;
+  }).join("");
+
+  if(live&&SID!=="s0"){
+    set(ref(db,`priority/${SID}/${PID}`),{nick:NICK,rank:order,type:top,ts:Date.now()}).catch(()=>{});
+    onValue(ref(db,`priority/${SID}`),s=>compare(s.val()||{},top),{onlyOnce:true});
+  }else{
+    $("r-cmp").textContent="미리보기 모드에서는 비교할 응답이 없습니다.";
+  }
+  show("v-done");
+}
+function compare(all,top){
+  const rows=Object.values(all).filter(r=>Array.isArray(r.rank));
+  const same=rows.filter(r=>r.type===top).length;
+  if(rows.length<3){ $("r-cmp").textContent=`아직 ${rows.length}명이 마쳤습니다. 잠시 뒤 강사 화면에서 함께 봅니다.`; return; }
+  const mean={}; ITEMS.forEach(it=>{ mean[it.id]=rows.reduce((s,r)=>s+(r.rank.indexOf(it.id)+1),0)/rows.length; });
+  const diff=ITEMS.map(it=>({it,d:mean[it.id]-(myRank.indexOf(it.id)+1)}))
+    .sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
+  $("r-cmp").textContent=`${rows.length}명 중 같은 유형은 ${same}명입니다. 평균과 가장 크게 갈린 항목은 아래와 같습니다.`;
+  $("r-diff").innerHTML=diff.map(x=>{
+    const up=x.d>0;
+    return `<div class="rank" style="background:${TYPES[x.it.g].c}"><span class="t">${x.it.t}</span>
+      <span class="gap ${up?"up":"down"}">평균보다 ${Math.abs(x.d).toFixed(1)}칸 ${up?"위":"아래"}</span></div>`;
+  }).join("");
+}
+$("again").onclick=()=>location.reload();
+
+/* ── 강사 집계 ── */
+let dSid="s1";
+function gate(){ show("v-gate"); setTimeout(()=>{const p=$("pin");if(p)p.focus();},120); }
+$("pin-ok").onclick=()=>{
+  if($("pin").value.trim()===String(TEACHER_PIN)){ $("pin").value=""; $("pin-msg").style.color=""; openDash(); }
+  else{ $("pin-msg").textContent="코드가 맞지 않습니다."; $("pin-msg").style.color="var(--hot)"; }
+};
+$("pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("pin-ok").click(); });
+$("pin-back").onclick=()=>show(live?"v-home":"v-setup");
+{ let lp=null; const bd=$("brand");
+  bd.addEventListener("pointerdown",()=>{lp=setTimeout(gate,2000);});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>bd.addEventListener(ev,()=>clearTimeout(lp)));
+}
+function tabs(){
+  const t=$("dtabs"); t.innerHTML="";
+  SESSIONS.filter(s=>s.id!=="s0").forEach(s=>{
+    const b=document.createElement("button");
+    b.className="tab"; b.setAttribute("aria-pressed",String(s.id===dSid));
+    b.innerHTML=s.d+"<small>"+s.p+"</small>";
+    b.onclick=()=>{dSid=s.id;tabs();watch();};
+    t.appendChild(b);
+  });
+}
+function openDash(){ if(SID&&SID!=="s0")dSid=SID; tabs(); show("v-dash"); watch(); }
+$("d-back").onclick=()=>{ if(offRes)offRes(); show(live?"v-home":"v-setup"); };
+$("d-reset").onclick=()=>{
+  if(!live) return;
+  if(!confirm(sesName(dSid)+" 분반의 응답을 모두 삭제합니다.")) return;
+  remove(ref(db,`priority/${dSid}`)).catch(()=>{});
+};
+function watch(){
+  if(offRes) offRes();
+  if(!live){ draw([]); return; }
+  offRes=onValue(ref(db,`priority/${dSid}`),s=>{
+    draw(Object.values(s.val()||{}).filter(r=>Array.isArray(r.rank)));
+    const t=new Date();
+    $("d-stamp").textContent="갱신 "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2)+" · 실시간";
+  });
+}
+function draw(rows){
+  $("d-n").textContent=rows.length;
+  $("d-split").innerHTML=["A","B","C","D"].map(g=>{
+    const n=rows.filter(r=>r.type===g).length;
+    return `<div style="background:${TYPES[g].c}"><div class="n">${n}</div><div class="k">${TYPES[g].n}</div></div>`;
+  }).join("");
+  $("d-who").innerHTML=rows.length? '<div class="who-list">'+rows
+    .sort((a,b)=>(a.type>b.type?1:-1))
+    .map(r=>`<span style="background:${TYPES[r.type]?TYPES[r.type].c:"#EEE"}">${esc(r.nick||"익명")}</span>`).join("")+'</div>' : "";
+
+  if(!rows.length){
+    $("d-top").textContent="–"; $("d-var").textContent="–";
+    $("d-bars").innerHTML='<div class="empty">아직 응답이 없습니다.<br>참가자가 마치면 여기에 바로 쌓입니다.</div>';
+    return;
+  }
+  const first={};
+  rows.forEach(r=>{ first[r.rank[0]]=(first[r.rank[0]]||0)+1; });
+  const topId=Object.keys(first).sort((a,b)=>first[b]-first[a])[0];
+  $("d-top").textContent=item(topId).t+" ("+first[topId]+"명)";
+
+  const st=ITEMS.map(it=>{
+    const ps=rows.map(r=>r.rank.indexOf(it.id)+1);
+    const m=ps.reduce((s,x)=>s+x,0)/ps.length;
+    const sd=Math.sqrt(ps.reduce((s,x)=>s+(x-m)*(x-m),0)/ps.length);
+    return {it,m,sd};
+  }).sort((a,b)=>a.m-b.m);
+  $("d-var").textContent=[...st].sort((a,b)=>b.sd-a.sd)[0].it.t;
+  $("d-bars").innerHTML=st.map(x=>
+    `<div class="barrow"><div class="h"><span class="t">${x.it.t}</span>
+     <span class="v">평균 ${x.m.toFixed(1)}위</span></div>
+     <div class="m"><i style="width:${(N+1-x.m)/N*100}%;background:${TYPES[x.it.g].b}"></i></div></div>`).join("");
+}
+</script>
+</body>
+</html>
