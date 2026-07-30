@@ -179,7 +179,7 @@
     <span class="eyebrow">강사용</span>
     <h1 style="font-size:22px">접속 코드 입력</h1>
     <div class="panel">
-            <input id="pin" type="password" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="••••">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="••••">
       <p class="note" id="pin-msg">모둠 참가자 화면에는 이 입구가 나타나지 않습니다.</p>
     </div>
     <button class="go" id="pin-ok">대시보드 열기</button>
@@ -194,8 +194,10 @@
       <p class="lede" style="margin-bottom:12px">지금 들어와 있는 모둠원</p>
       <div class="dots" id="w-dots" style="gap:6px"></div>
       <p class="note">카드를 트레이에서 월 칸으로 끌어 놓으면 모두의 화면에 바로 나타납니다. 제한시간은 3분이고, 누구든 시작을 누르면 모둠 전체가 함께 출발합니다.</p>
+      <p class="note" id="w-stale" style="display:none;color:var(--hot);font-weight:700">이 판에 이전 활동 기록이 남아 있습니다. 아래 <b>판 비우기</b>를 먼저 누르세요.</p>
     </div>
     <button class="go" id="begin">모둠 전체 시작</button>
+    <button class="ghostbtn" id="clear">이 판 비우기</button>
     <button class="ghostbtn" id="w-back">모둠 다시 고르기</button>
   </section>
 
@@ -260,7 +262,7 @@
 const FIREBASE = {
   apiKey:      "AIzaSyCiD-3-FdSyXwtgahuHiaUDYgum8uzuJG8",
   databaseURL: "https://yeusu-75fd7-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:   "yeusu-75fd7"
+  projectId:   "yeusu-75fd"
 };
 
 /* 강사용 접속 코드 — 원하는 값으로 바꾸세요 */
@@ -386,7 +388,7 @@ $("enter").onclick=()=>{
   $("w-ses").textContent=sesName(S.sid);
   $("w-team").textContent=S.team+"모둠 판";
   S.members[ME]={ts:Date.now(),first:Date.now()};
-  show("v-wait"); drawDots();
+  show("v-wait"); drawDots(); stale();
   if(!live) return;
   const mref=ref(db,`${roomPath()}/members/${ME}`);
   set(mref,{ts:Date.now(),first:Date.now()}).catch(fail);
@@ -397,11 +399,37 @@ $("enter").onclick=()=>{
     if(!S.members[ME]) S.members[ME]={ts:Date.now(),first:Date.now()};
     S.started=v.started||0; S.submitted=!!v.submitted;
     note();
-    if($("v-wait").classList.contains("is-on")){ drawDots(); if(S.started) play(); }
+    if($("v-wait").classList.contains("is-on")){
+      drawDots(); stale();
+      if(S.started && !S.submitted && !expired()) play();
+    }
     else if($("v-play").classList.contains("is-on")){ S.submitted?finish():render(); }
   },fail);
 };
 $("w-back").onclick=()=>{ if(offRoom)offRoom(); leave(); show("v-home"); };
+
+/* 이전 기록 판정 — 제출됐거나, 시작 후 제한시간이 지났거나, 시작 없이 카드가 놓여 있는 상태 */
+function expired(){ return S.started>0 && (Date.now()-S.started)/1000 > LIMIT+15; }
+function dirty(){ return S.submitted || expired() || (!S.started && Object.keys(S.placed).length>0); }
+function stale(){
+  const d=dirty();
+  $("w-stale").style.display = d?"":"none";
+  $("begin").disabled = d;
+  $("clear").style.fontWeight = d?"800":"700";
+  $("clear").style.color = d?"var(--hot)":"var(--muted)";
+}
+$("clear").onclick=async ()=>{
+  if(!confirm("이 모둠 판의 카드 배치와 진행 기록을 지웁니다.")) return;
+  S.placed={}; S.started=0; S.submitted=false; S.sent=false;
+  if(live){
+    await remove(ref(db,roomPath())).catch(fail);
+    const m=ref(db,`${roomPath()}/members/${ME}`);
+    set(m,{ts:Date.now(),first:Date.now()}).catch(fail);
+    onDisconnect(m).remove();
+  }
+  S.members={[ME]:{ts:Date.now(),first:Date.now()}};
+  drawDots(); stale();
+};
 function leave(){ if(live) remove(ref(db,`${roomPath()}/members/${ME}`)).catch(()=>{}); }
 window.addEventListener("pagehide",leave);
 function fail(){ $("sync").textContent="연결이 끊겼습니다. 배치는 계속 하셔도 됩니다."; $("sync").classList.add("bad"); }
