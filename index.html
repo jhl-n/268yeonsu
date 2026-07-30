@@ -1,0 +1,618 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="light only">
+<title>연구부장 연간 업무 흐름 · 타임라인 조립</title>
+<style>
+  :root{
+    --bg:#F6F4FB; --ink:#3B3652; --muted:#7C7695; --line:#E9E4F5;
+    --card:#FFFFFF; --primary:#6C5CE0; --soft:#EDE9FF;
+    --good:#2FA37C; --hot:#E8845C;
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sh:0 3px 14px rgba(72,58,130,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;overscroll-behavior:none}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.45;-webkit-text-size-adjust:100%}
+  #app{max-width:1120px;margin:0 auto;padding:14px 13px 36px}
+  .view{display:none} .view.is-on{display:block}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+
+  h1{font-size:25px;font-weight:800;letter-spacing:-.035em;margin:16px 0 6px;line-height:1.22}
+  h2{font-size:15px;font-weight:800;letter-spacing:-.01em;margin:22px 0 9px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;color:var(--primary)}
+  .lede{color:var(--muted);font-size:13.5px;margin:0}
+  .note{font-size:12px;color:var(--muted);margin-top:11px;line-height:1.6}
+
+  .panel{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--sh)}
+  .panel+.panel{margin-top:11px}
+
+  .opts{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+  .opt{text-align:left;background:var(--card);border-radius:16px;padding:12px 14px;font-weight:700;font-size:14px;box-shadow:var(--sh);transition:.14s}
+  .opt small{display:block;font-weight:600;font-size:11.5px;color:var(--muted)}
+  .opt[aria-pressed="true"]{background:var(--primary);color:#fff;transform:translateY(-1px)}
+  .opt[aria-pressed="true"] small{color:#D5CDFF}
+  .teams{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .teams .opt{text-align:center;padding:14px 4px;font-size:15px}
+
+  .go{display:block;width:100%;margin-top:14px;padding:16px;border-radius:999px;background:var(--primary);color:#fff;font-weight:800;font-size:16px;letter-spacing:-.01em;box-shadow:0 6px 16px rgba(108,92,224,.32)}
+  .go:active{transform:translateY(2px)}
+  .go[disabled]{background:#D6D1E8;box-shadow:none;color:#fff}
+  .ghostbtn{display:block;width:100%;margin-top:9px;padding:12px;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--muted);background:var(--card);box-shadow:var(--sh)}
+  .link{display:inline-block;margin-top:16px;font-size:12.5px;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+  /* 헤더 */
+  .hud{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:20px;padding:10px 14px;box-shadow:var(--sh)}
+  .hud .who{font-weight:800;font-size:14px;letter-spacing:-.02em;flex:none}
+  .hud .who i{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .dots{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+  .dot{width:15px;height:15px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;display:grid;place-items:center}
+  .clock{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;flex:none}
+  .clock.warn{color:var(--hot)}
+  .prog{height:8px;background:#E9E4F5;border-radius:999px;margin:9px 2px 0;overflow:hidden}
+  .prog i{display:block;height:100%;background:var(--primary);border-radius:999px;width:0;transition:width .3s}
+  .cnt{font-size:11.5px;color:var(--muted);font-weight:700;margin:6px 4px 0;display:flex;justify-content:space-between}
+
+  /* 카드 트레이 */
+  .tray{margin-top:11px;background:#EFEBFA;border-radius:20px;padding:10px 10px 12px;min-height:104px}
+  .tray.over{background:#E2DBFA}
+  .tray-l{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.06em;margin:0 4px 8px}
+  .strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+  .strip::-webkit-scrollbar{height:5px}
+  .strip::-webkit-scrollbar-thumb{background:#CFC6EC;border-radius:9px}
+  .tcard{
+    flex:none;width:152px;background:var(--card);border-radius:15px;padding:10px 11px;
+    box-shadow:0 2px 8px rgba(72,58,130,.1);touch-action:pan-x;user-select:none;-webkit-user-select:none;
+  }
+  .tcard .t{font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1.28}
+  .tcard .s{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.3}
+  .tcard.sel{outline:3px solid var(--primary);outline-offset:1px}
+  .tray-done{font-size:12.5px;color:var(--muted);font-weight:700;padding:16px 6px;text-align:center}
+
+  /* 보드 */
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+  @media(min-width:700px){.board{grid-template-columns:repeat(4,1fr)}}
+  .lane{border-radius:18px;padding:8px 9px 9px;min-height:78px;transition:.12s;position:relative}
+  .lane.over{transform:scale(1.03);box-shadow:0 0 0 3px var(--primary)}
+  .lane-h{font-size:12.5px;font-weight:800;letter-spacing:-.02em;opacity:.72;margin-bottom:6px;display:flex;justify-content:space-between}
+  .lane-h b{font-family:var(--mono);font-weight:700;font-size:11px;opacity:.6}
+  .chip{
+    display:flex;align-items:center;gap:5px;width:100%;text-align:left;background:rgba(255,255,255,.86);
+    border-radius:11px;padding:6px 8px;font-size:11.5px;font-weight:700;letter-spacing:-.01em;
+    margin-bottom:4px;touch-action:none;user-select:none;-webkit-user-select:none;
+    animation:pop .28s cubic-bezier(.2,1.3,.4,1);line-height:1.25;
+  }
+  .chip u{width:7px;height:7px;border-radius:50%;flex:none;text-decoration:none}
+  @keyframes pop{from{transform:scale(1.18);opacity:.3}to{transform:scale(1);opacity:1}}
+  .lane-e{font-size:11px;opacity:.45;font-weight:700;padding:4px 2px}
+
+  #ghost{position:fixed;z-index:99;pointer-events:none;display:none;width:158px;background:#fff;border-radius:15px;padding:10px 11px;box-shadow:0 12px 28px rgba(60,45,120,.3);transform:rotate(-3deg) scale(1.04);font-size:13px;font-weight:800;letter-spacing:-.02em;line-height:1.28}
+  #ghost.on{display:block}
+
+  .hint{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px}
+  .sync{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+  .sync.bad{color:var(--hot);font-weight:700}
+
+  /* 결과 */
+  .score{background:linear-gradient(140deg,#7A69E6,#A79BF2);color:#fff;border-radius:24px;padding:22px;text-align:center;box-shadow:0 10px 26px rgba(108,92,224,.3)}
+  .score .l{font-size:11px;letter-spacing:.2em;font-weight:800;opacity:.82}
+  .score .n{font-family:var(--mono);font-size:52px;font-weight:700;letter-spacing:-.045em;line-height:1.06;margin-top:4px}
+  .score .d{font-size:13px;opacity:.92;margin-top:7px}
+  .rev{background:var(--card);border-radius:16px;padding:12px 13px;margin-bottom:8px;box-shadow:var(--sh)}
+  .rev-h{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .tag{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px}
+  .tag.x{background:#FFE1D8;color:#C15A32} .tag.n{background:#EDEAF6;color:var(--muted)}
+  .rev-t{font-weight:800;font-size:13.5px;letter-spacing:-.02em}
+  .rev-w{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  /* 대시보드 */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}
+  @media(min-width:720px){.tabs{grid-template-columns:repeat(4,1fr)}}
+  .tab{background:var(--card);border-radius:15px;padding:10px 6px;font-weight:800;font-size:13px;text-align:center;box-shadow:var(--sh)}
+  .tab small{display:block;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .tab[aria-pressed="true"]{background:var(--primary);color:#fff}
+  .tab[aria-pressed="true"] small{color:#D5CDFF}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px}
+  .stat{background:var(--card);border-radius:16px;padding:11px 12px;box-shadow:var(--sh)}
+  .stat .k{font-size:10px;letter-spacing:.1em;color:var(--muted);font-weight:800}
+  .stat .v{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.03em}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.08em;color:var(--muted);padding:0 6px 7px;font-weight:800}
+  td{padding:9px 6px;border-top:1px solid var(--line);font-weight:600}
+  td.rank{font-family:var(--mono);font-weight:800;width:32px;color:var(--muted)}
+  tr.top td{background:#F4F1FF} tr.top td.rank{color:var(--primary);font-size:16px}
+  td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  .miss{padding:11px 0;border-top:1px solid var(--line)}
+  .miss:first-child{border-top:none}
+  .miss-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .miss-t{font-weight:800;font-size:13px;letter-spacing:-.02em}
+  .miss-p{font-family:var(--mono);font-size:12.5px;font-weight:700;flex:none;color:var(--hot)}
+  .meter{height:7px;background:#EDEAF6;border-radius:999px;margin-top:7px;overflow:hidden}
+  .meter i{display:block;height:100%;background:#F0A184;border-radius:999px}
+  .miss-w{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .row button{flex:1;background:var(--card);border-radius:999px;padding:12px;font-weight:700;font-size:13px;box-shadow:var(--sh)}
+  .row button.danger{color:#C15A32}
+  .empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;line-height:1.65}
+  .warnbar{background:#FFF1D9;border-radius:16px;padding:10px 13px;font-size:12.5px;font-weight:700;margin-bottom:11px;display:none;color:#8A6420}
+  .warnbar.on{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="warnbar" id="warn"></div>
+
+  <!-- 설정 안내 -->
+  <section class="view" id="v-setup">
+    <span class="eyebrow">설정 필요</span>
+    <h1>Firebase 연결 정보를<br>아직 넣지 않았습니다</h1>
+    <div class="panel">
+      <p class="lede">이 파일을 편집기로 열어 맨 위 <b>FIREBASE 설정</b> 부분에 Firebase 콘솔에서 복사한 값을 붙여 넣으세요. 함께 드린 설정 안내 문서의 순서를 따르시면 됩니다.</p>
+      <p class="note">연결 정보 없이도 아래 버튼으로 화면과 카드 배치는 확인할 수 있습니다. 다만 모둠원끼리 동기화되지 않고 대시보드에도 결과가 모이지 않습니다.</p>
+    </div>
+    <button class="go" id="solo">혼자 미리보기로 실행</button>
+  </section>
+
+  <!-- 시작 -->
+  <section class="view" id="v-home">
+    <span class="eyebrow">연구부장의 역할 · 연간 업무 흐름</span>
+    <h1>1년치 업무를<br>제자리에 올려놓기</h1>
+    <p class="lede">업무 카드 22장을 월별 칸으로 옮기세요. 모둠원이 각자 기기로 같은 판에 함께 배치합니다.</p>
+    <h2>연수 시간</h2>
+    <div class="opts" id="sess"></div>
+    <h2>모둠</h2>
+    <div class="teams" id="teams"></div>
+    <button class="go" id="enter" disabled>모둠 판 들어가기</button>
+    <p class="note">모둠원 모두 같은 시간·같은 모둠을 고르면 한 판에서 만납니다.</p>
+    <a class="link" href="#" id="toDash">강사용 대시보드 열기</a>
+  </section>
+
+  <!-- 대기 -->
+  <section class="view" id="v-wait">
+    <span class="eyebrow" id="w-ses">–</span>
+    <h1 id="w-team">–</h1>
+    <div class="panel">
+      <p class="lede" style="margin-bottom:12px">지금 들어와 있는 모둠원</p>
+      <div class="dots" id="w-dots" style="gap:6px"></div>
+      <p class="note">카드를 트레이에서 월 칸으로 끌어 놓으면 모두의 화면에 바로 나타납니다. 제한시간은 3분이고, 누구든 시작을 누르면 모둠 전체가 함께 출발합니다.</p>
+    </div>
+    <button class="go" id="begin">모둠 전체 시작</button>
+    <button class="ghostbtn" id="w-back">모둠 다시 고르기</button>
+  </section>
+
+  <!-- 진행 -->
+  <section class="view" id="v-play">
+    <div class="hud">
+      <div class="who" id="p-team">–<i id="p-ses">–</i></div>
+      <div class="dots" id="p-dots"></div>
+      <div class="clock" id="p-clock">3:00</div>
+    </div>
+    <div class="prog"><i id="p-bar"></i></div>
+    <div class="cnt"><span id="p-count">0 / 22 배치</span><span id="p-left">남은 카드 22장</span></div>
+    <div class="tray" id="tray" data-drop="tray">
+      <div class="tray-l">배치할 업무 카드 · 아래 월 칸으로 끌어놓기</div>
+      <div class="strip" id="strip"></div>
+    </div>
+    <div class="board" id="board"></div>
+    <p class="hint">카드를 눌러 아래로 끌어놓으세요. 놓인 카드를 누르면 트레이로 돌아갑니다.</p>
+    <p class="sync" id="sync">연결 중</p>
+    <button class="go" id="submit" style="display:none">모둠 답안 제출</button>
+  </section>
+
+  <!-- 결과 -->
+  <section class="view" id="v-done">
+    <div class="score">
+      <div class="l">우리 모둠 점수</div>
+      <div class="n" id="r-score">0</div>
+      <div class="d" id="r-detail">–</div>
+    </div>
+    <h2>다시 볼 카드</h2>
+    <div id="r-review"></div>
+    <button class="go" id="toDash2">전체 순위 보기</button>
+    <button class="ghostbtn" id="again">처음으로</button>
+  </section>
+
+  <!-- 대시보드 -->
+  <section class="view" id="v-dash">
+    <span class="eyebrow">강사용 · 실시간</span>
+    <h1 style="font-size:21px">모둠 결과 대시보드</h1>
+    <div class="tabs" id="dtabs"></div>
+    <div class="stats">
+      <div class="stat"><div class="k">제출 모둠</div><div class="v" id="d-teams">0</div></div>
+      <div class="stat"><div class="k">평균 정답</div><div class="v" id="d-avg">0</div></div>
+      <div class="stat"><div class="k">최고 점수</div><div class="v" id="d-best">0</div></div>
+    </div>
+    <div class="panel"><h2 style="margin-top:0">모둠 순위</h2><div id="d-rank"></div></div>
+    <div class="panel"><h2 style="margin-top:0">가장 많이 틀린 카드</h2><div id="d-miss"></div></div>
+    <div class="row">
+      <button id="d-back">시작 화면</button>
+      <button class="danger" id="d-reset">이 분반 기록 삭제</button>
+    </div>
+    <p class="note" id="d-stamp">결과가 들어오는 즉시 자동으로 갱신됩니다.</p>
+  </section>
+</div>
+<div id="ghost"></div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════
+   FIREBASE 설정 — 여기 세 줄만 바꾸세요
+   Firebase 콘솔 > 프로젝트 설정 > 내 앱 > SDK 설정에서 복사
+   ══════════════════════════════════════════════════════ */
+const FIREBASE = {
+  apiKey:      "AIzaSyCiD-3-FdSyXwtgahuHiaUDYgum8uzuJG8",
+  databaseURL: "https://yeusu-75fd7-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:   "yeusu-75fd7"
+};
+/* ════════════════════════════════════════════════════ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, update, set, remove, onDisconnect }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const SESSIONS=[
+  {id:"s1",d:"8월 4일",p:"4-5교시"},
+  {id:"s2",d:"8월 4일",p:"6-7교시"},
+  {id:"s3",d:"8월 11일",p:"4-5교시"},
+  {id:"s4",d:"8월 11일",p:"6-7교시"},
+  {id:"s0",d:"연습",p:"기록 안 함"}
+];
+const LIMIT=180, TEAMS=8;
+const MONTHS=[
+  {m:1,c:"#DCE7FF"},{m:2,c:"#D3EFE6"},{m:3,c:"#FFE3D2"},{m:4,c:"#EFE0FF"},
+  {m:7,c:"#FFF1C7"},{m:10,c:"#FFDCE6"},{m:11,c:"#DFF0CB"},{m:12,c:"#DCE2F7"}
+];
+const PAL=["#7C6BE8","#E88A62","#3FA98A","#D96A9A","#4E8FD6","#C9913B","#8B6ED1","#4FA3A0"];
+
+const CARDS=[
+ {id:"c01",m:1,t:"학교자율과제 계획서 제출",s:"학교예산 5% 이상 편성",
+  w:"12월 워크숍에서 정한 내용을 예산 계획까지 담아 제출합니다. 계획 수립은 전년도 12월, 제출이 1월입니다."},
+ {id:"c02",m:2,t:"연간 교육과정 시간 배당 취합",s:"학년별 시수편성 · 20% 증감 확인",
+  w:"학년이 교육과정을 편성하기 전에 시수 증감부터 취합해야 하고, 3월 학사운영 전 학운위 심의까지 마쳐야 합니다."},
+ {id:"c03",m:2,t:"학운위 심의",s:"시수편성 · 학교자율시간 계획",
+  w:"3월 학사운영이 시작되기 전에 끝나야 합니다. 학교자율시간 계획은 전년도 11월 컨설팅 결과를 반영합니다."},
+ {id:"c04",m:2,t:"이지에듀 계정 등록·시수편성",s:"학교 계정 등록(지출은 3월)",
+  w:"이 작업이 끝나야 각 학년이 학년 교육과정을 작성할 수 있어, 2월 업무 중 가장 앞에 두어야 합니다."},
+ {id:"c05",m:2,t:"시간표 작성",s:"특별실 · 전담",
+  w:"체육관·과학실처럼 균등 배분이 필요한 특별실을 먼저 배정하고 전담교사와 협의합니다. 전년도 초안이 있으면 수월합니다."},
+ {id:"c06",m:2,t:"학년별 예산 배정 안내",s:"부장협의에서 항목별 세부 안내",
+  w:"학년 교육과정 수립에 반드시 필요한 정보라 2월 첫 교육과정협의회에서 안내하고 패들렛 등에 상시 공유합니다."},
+ {id:"c07",m:2,t:"교육과정 편성 교육활동 기준 안내",s:"초등학교 교육과정 필수 자료",
+  w:"학년 교육과정 편성의 필수 자료입니다. 학년이 작업을 시작하기 전에 손에 쥐어져 있어야 합니다."},
+ {id:"c08",m:3,t:"학업성적관리위원회",s:"규정 개정 · 1학기 평가계획 심의",
+  w:"4월 정보공시의 필수 입력 자료라 3월 중에 마쳐야 합니다. 위원장인 교장선생님 일정을 먼저 잡습니다."},
+ {id:"c09",m:3,t:"선행학습예방 연수 실시",s:"법령상 필수 · 학부모총회에 포함",
+  w:"감사 필수 확인 항목입니다. 연수 계획 - 등록부 - 결과보고까지 내부결재로 남겨야 합니다."},
+ {id:"c10",m:3,t:"학교교육과정 완료·학년 교육과정 취합",s:"편제 · 시간 배당 · 평가계획",
+  w:"2월의 시수편성과 시간표가 끝나야 가능한 마지막 단계입니다. 2월이 밀리면 그대로 3월이 밀립니다."},
+ {id:"c11",m:4,t:"1차 정보공시 자료 입력",s:"교육과정 · 특색사업 · 평가계획 · 성적관리규정",
+  w:"3월 학업성적관리위원회의 심의 결과가 그대로 들어갑니다. 3월에 심의가 끝나야 4월이 가능합니다."},
+ {id:"c12",m:7,t:"생활통지표 점검 (1학기)",s:"수업일수 · 특기사항 확인",
+  w:"학기말 점검 항목입니다. 같은 점검을 2학기 말인 12월에 한 번 더 합니다."},
+ {id:"c13",m:7,t:"교과별 학기말 종합의견 작성 점검 (1학기)",s:"동학년 교차 점검",
+  w:"맞춤법 검사와 동학년 교차 점검을 거쳐 연구부장 검토, 교감선생님 검토 순으로 올라갑니다."},
+ {id:"c14",m:7,t:"평가 기준안·평가도구 사후 상신 확인 (1학기)",s:"교사별 평가 마무리",
+  w:"3~4월에 세운 평가계획이 실제로 어떻게 운영됐는지 문서로 닫는 단계입니다. 학기말에 확인하지 않으면 남지 않습니다."},
+ {id:"c15",m:10,t:"인정도서 학운위 심의 및 도서 신청",s:"10월 말 완료",
+  w:"내년도 사용 도서를 정하는 일이라 10월 말까지 끝나야 다음 학년도 준비가 밀리지 않습니다."},
+ {id:"c16",m:11,t:"학교 자율시간 계획서 제출 및 컨설팅",s:"다음 학년도 계획",
+  w:"여기서 컨설팅받은 계획이 이듬해 2월 학운위 심의 안건으로 올라갑니다."},
+ {id:"c17",m:11,t:"학교자율역량진단 실시",s:"교직원 · 학생 · 학부모 설문",
+  w:"진단 결과가 학교평가에 반영되고, 12월 자율과제 계획 수립의 근거 자료가 됩니다."},
+ {id:"c18",m:12,t:"교육과정워크숍",s:"전년도 자료 사전 안내 후 협의",
+  w:"한 해 교육과정을 평가하고 다음 해 방향을 정하는 자리입니다. 이후 12월 업무가 모두 여기서 갈라집니다."},
+ {id:"c19",m:12,t:"내년도 학교 자율과제 계획 수립",s:"경기교육정책과제 1~3순위 선정",
+  w:"자율역량 진단 결과를 참고해 과제를 정하고, 여기서 정한 내용이 1월 계획서 제출로 이어집니다."},
+ {id:"c20",m:12,t:"종합일람표 점검",s:"출결 · 교과 · 창체 · 행동특성",
+  w:"자료 누락과 맞춤법을 확인합니다. 동학년 교차 점검을 2회 이상 거치는 것이 안전합니다."},
+ {id:"c21",m:12,t:"생활통지표 점검 (2학기)",s:"1·2학기 내용 반영 여부 확인",
+  w:"1·2학기 내용이 모두 반영됐는지, 모든 영역이 기록됐는지 확인합니다. 연구부장 검토 후 교감선생님 검토."},
+ {id:"c22",m:12,t:"하반기 자율과제 체크리스트 제출",s:"체크리스트 양식",
+  w:"한 해 자율과제 운영 결과를 정리해 제출하고, 그 결과가 다음 해 계획 수립의 근거가 됩니다."}
+];
+const TOTAL=CARDS.length;
+
+/* ── 연결 ── */
+let db=null, live=false;
+try{
+  if(FIREBASE.databaseURL && FIREBASE.databaseURL.startsWith("http")){
+    db=getDatabase(initializeApp(FIREBASE)); live=true;
+  }
+}catch(e){ live=false; }
+
+const $=i=>document.getElementById(i);
+const ME="d"+Math.random().toString(36).slice(2,9);
+const S={sid:null,team:null,started:0,submitted:false,placed:{},members:{},sent:false};
+let offRoom=null, offRes=null, clockId=null;
+
+function show(v){["v-setup","v-home","v-wait","v-play","v-done","v-dash"]
+  .forEach(x=>$(x).classList.toggle("is-on",x===v)); window.scrollTo(0,0);}
+const sesName=id=>{const s=SESSIONS.find(x=>x.id===id);return s?s.d+" "+s.p:id;};
+const mmss=n=>Math.floor(n/60)+":"+("0"+(n%60)).slice(-2);
+const card=id=>CARDS.find(c=>c.id===id);
+const roomPath=()=>`sessions/${S.sid}/rooms/${S.team}`;
+const memberIds=()=>Object.keys(S.members).sort((a,b)=>(S.members[a].first||0)-(S.members[b].first||0)||a.localeCompare(b));
+const colorOf=id=>PAL[Math.max(0,memberIds().indexOf(id))%PAL.length];
+const idxOf=id=>memberIds().indexOf(id)+1;
+
+show(live?"v-home":"v-setup");
+$("solo").onclick=()=>{ show("v-home"); $("warn").textContent="미리보기 모드입니다. 모둠원 동기화와 대시보드 집계는 작동하지 않습니다."; $("warn").classList.add("on"); };
+
+/* ── 시작 화면 ── */
+{
+  const box=$("sess");
+  SESSIONS.forEach(s=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.setAttribute("aria-pressed","false");
+    b.innerHTML=s.d+"<small>"+s.p+"</small>";
+    b.onclick=()=>{S.sid=s.id;[...box.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");$("enter").disabled=!(S.sid&&S.team);};
+    box.appendChild(b);
+  });
+  const tb=$("teams");
+  for(let i=1;i<=TEAMS;i++){
+    const b=document.createElement("button");
+    b.className="opt"; b.setAttribute("aria-pressed","false"); b.textContent=i+"모둠";
+    b.onclick=()=>{S.team=i;[...tb.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+      b.setAttribute("aria-pressed","true");$("enter").disabled=!(S.sid&&S.team);};
+    tb.appendChild(b);
+  }
+}
+
+/* ── 입장 ── */
+$("enter").onclick=()=>{
+  $("w-ses").textContent=sesName(S.sid);
+  $("w-team").textContent=S.team+"모둠 판";
+  S.members[ME]={ts:Date.now(),first:Date.now()};
+  show("v-wait"); drawDots();
+  if(!live) return;
+  const mref=ref(db,`${roomPath()}/members/${ME}`);
+  set(mref,{ts:Date.now(),first:Date.now()}).catch(fail);
+  onDisconnect(mref).remove();
+  offRoom=onValue(ref(db,roomPath()),snap=>{
+    const v=snap.val()||{};
+    S.placed=v.placed||{}; S.members=v.members||{}; 
+    if(!S.members[ME]) S.members[ME]={ts:Date.now(),first:Date.now()};
+    S.started=v.started||0; S.submitted=!!v.submitted;
+    note();
+    if($("v-wait").classList.contains("is-on")){ drawDots(); if(S.started) play(); }
+    else if($("v-play").classList.contains("is-on")){ S.submitted?finish():render(); }
+  },fail);
+};
+$("w-back").onclick=()=>{ if(offRoom)offRoom(); leave(); show("v-home"); };
+function leave(){ if(live) remove(ref(db,`${roomPath()}/members/${ME}`)).catch(()=>{}); }
+window.addEventListener("pagehide",leave);
+function fail(){ $("sync").textContent="연결이 끊겼습니다. 배치는 계속 하셔도 됩니다."; $("sync").classList.add("bad"); }
+function note(){ const e=$("sync"); e.classList.remove("bad");
+  e.textContent = live?`모둠원 ${Object.keys(S.members).length}명과 같은 판을 보고 있습니다`:"미리보기 모드"; }
+
+$("begin").onclick=()=>{
+  if(!S.started){ S.started=Date.now(); if(live) update(ref(db,roomPath()),{started:S.started}).catch(fail); }
+  play();
+};
+
+function drawDots(){
+  ["w-dots","p-dots"].forEach(t=>{
+    const box=$(t); if(!box) return; box.innerHTML="";
+    memberIds().forEach(d=>{
+      const s=document.createElement("span");
+      s.className="dot"; s.style.background=colorOf(d); s.textContent=idxOf(d);
+      if(t==="w-dots"){s.style.width="26px";s.style.height="26px";s.style.fontSize="12px";}
+      box.appendChild(s);
+    });
+  });
+}
+
+/* ── 진행 ── */
+function play(){
+  $("p-team").firstChild.textContent=S.team+"모둠";
+  $("p-ses").textContent=sesName(S.sid);
+  show("v-play"); render(); note();
+  if(clockId) return;
+  clockId=setInterval(()=>{
+    const left=LIMIT-Math.floor((Date.now()-S.started)/1000);
+    const c=$("p-clock"); c.textContent=mmss(Math.max(0,left)); c.classList.toggle("warn",left<=30);
+    if(left<=0) finish();
+  },400);
+}
+const leftSec=()=>Math.max(0,LIMIT-Math.floor((Date.now()-S.started)/1000));
+const isPlaced=id=>S.placed[id]&&S.placed[id].m;
+
+function render(){
+  const done=CARDS.filter(c=>isPlaced(c.id)).length;
+  $("p-count").textContent=done+" / "+TOTAL+" 배치";
+  $("p-left").textContent="남은 카드 "+(TOTAL-done)+"장";
+  $("p-bar").style.width=(done/TOTAL*100)+"%";
+  $("submit").style.display=done===TOTAL?"":"none";
+  drawDots();
+
+  const strip=$("strip"); strip.innerHTML="";
+  const rest=CARDS.filter(c=>!isPlaced(c.id));
+  if(!rest.length) strip.innerHTML='<div class="tray-done">모든 카드를 배치했습니다. 확인하고 제출하세요.</div>';
+  rest.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="tcard"+(sel===c.id?" sel":"");
+    d.innerHTML='<div class="t">'+c.t+'</div><div class="s">'+c.s+'</div>';
+    grab(d,c.id,"tray"); strip.appendChild(d);
+  });
+
+  const b=$("board"); b.innerHTML="";
+  MONTHS.forEach(M=>{
+    const lane=document.createElement("div");
+    lane.className="lane"; lane.style.background=M.c;
+    lane.dataset.drop="lane"; lane.dataset.m=M.m;
+    const mine=CARDS.filter(c=>S.placed[c.id]&&S.placed[c.id].m===M.m);
+    lane.innerHTML='<div class="lane-h"><span>'+M.m+'월</span><b>'+(mine.length||"")+'</b></div>';
+    if(!mine.length){const e=document.createElement("div");e.className="lane-e";e.textContent="여기로 끌어놓기";lane.appendChild(e);}
+    mine.forEach(c=>{
+      const chip=document.createElement("div"); chip.className="chip";
+      chip.innerHTML='<u style="background:'+colorOf(S.placed[c.id].by)+'"></u>'+c.t;
+      grab(chip,c.id,"lane"); lane.appendChild(chip);
+    });
+    b.appendChild(lane);
+  });
+}
+function put(id,m){
+  S.placed[id]={m:m,ts:Date.now(),by:ME}; sel=null;
+  try{navigator.vibrate&&navigator.vibrate(14);}catch(e){}
+  render();
+  if(live) set(ref(db,`${roomPath()}/placed/${id}`),S.placed[id]).catch(fail);
+}
+function pull(id){
+  delete S.placed[id]; render();
+  if(live) remove(ref(db,`${roomPath()}/placed/${id}`)).catch(fail);
+}
+
+/* ── 드래그 ── */
+let drag=null, sel=null;
+function grab(el,id,from){
+  el.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined&&e.button>0) return;
+    drag={id,from,x0:e.clientX,y0:e.clientY,on:false,el};
+  });
+}
+document.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
+  if(!drag.on){
+    if(drag.from==="tray"&&Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>8){drag=null;return;}
+    if(Math.abs(dx)<9&&Math.abs(dy)<9) return;
+    drag.on=true;
+    const g=$("ghost"); g.textContent=card(drag.id).t; g.classList.add("on");
+    drag.el.style.opacity=".35";
+  }
+  e.preventDefault();
+  const g=$("ghost"); g.style.left=(e.clientX-79)+"px"; g.style.top=(e.clientY-30)+"px";
+  const under=document.elementFromPoint(e.clientX,e.clientY);
+  const tgt=under&&under.closest?under.closest("[data-drop]"):null;
+  document.querySelectorAll(".lane.over,.tray.over").forEach(n=>n.classList.remove("over"));
+  if(tgt) tgt.classList.add("over");
+  drag.tgt=tgt;
+  if(e.clientY<70) window.scrollBy(0,-14);
+  else if(e.clientY>window.innerHeight-70) window.scrollBy(0,14);
+},{passive:false});
+document.addEventListener("pointerup",()=>{
+  if(!drag) return; const d=drag; drag=null;
+  $("ghost").classList.remove("on");
+  document.querySelectorAll(".lane.over,.tray.over").forEach(n=>n.classList.remove("over"));
+  if(d.el) d.el.style.opacity="";
+  if(!d.on){ d.from==="lane"?pull(d.id):(sel=(sel===d.id?null:d.id),render()); return; }
+  const t=d.tgt;
+  if(t&&t.dataset.drop==="lane") put(d.id,parseInt(t.dataset.m,10));
+  else if(t&&t.dataset.drop==="tray"&&d.from==="lane") pull(d.id);
+});
+document.addEventListener("pointercancel",()=>{ if(drag){$("ghost").classList.remove("on");if(drag.el)drag.el.style.opacity="";drag=null;} });
+document.addEventListener("click",e=>{
+  if(!sel) return;
+  const t=e.target.closest?e.target.closest('[data-drop="lane"]'):null;
+  if(t) put(sel,parseInt(t.dataset.m,10));
+});
+
+/* ── 채점 ── */
+$("submit").onclick=()=>finish();
+function finish(){
+  if(S.sent) return; S.sent=true;
+  clearInterval(clockId); clockId=null;
+  if(offRoom) offRoom();
+  let correct=0; CARDS.forEach(c=>{ if(S.placed[c.id]&&S.placed[c.id].m===c.m) correct++; });
+  const done=CARDS.filter(c=>isPlaced(c.id)).length;
+  const bonus=done===TOTAL?leftSec()*2:0;
+  const score=correct*100+bonus;
+  const elapsed=Math.min(LIMIT,Math.round((Date.now()-S.started)/1000));
+
+  $("r-score").textContent=score;
+  $("r-detail").textContent=`정답 ${correct} / ${TOTAL} · 소요 ${mmss(elapsed)}`+(bonus?` · 시간 보너스 +${bonus}`:"");
+  const box=$("r-review"); box.innerHTML="";
+  const bad=CARDS.filter(c=>!(S.placed[c.id]&&S.placed[c.id].m===c.m));
+  if(!bad.length) box.innerHTML='<div class="rev"><div class="rev-t">22장 전부 제자리입니다.</div></div>';
+  bad.forEach(c=>{
+    const mine=S.placed[c.id]&&S.placed[c.id].m;
+    const d=document.createElement("div"); d.className="rev";
+    d.innerHTML='<div class="rev-h"><span class="tag '+(mine?"x":"n")+'">'+(mine?mine+"월":"미배치")
+      +'</span><span class="rev-t">'+c.t+' → '+c.m+'월</span></div><div class="rev-w">'+c.w+'</div>';
+    box.appendChild(d);
+  });
+
+  if(live && S.sid!=="s0"){
+    const flat={}; CARDS.forEach(c=>{ if(isPlaced(c.id)) flat[c.id]=S.placed[c.id].m; });
+    set(ref(db,`sessions/${S.sid}/results/${S.team}`),{
+      team:S.team,score,correct,placed:done,elapsed,
+      people:Object.keys(S.members).length,answers:flat,ts:Date.now()
+    }).catch(fail);
+    update(ref(db,roomPath()),{submitted:true}).catch(()=>{});
+  }
+  show("v-done");
+}
+$("again").onclick=()=>location.reload();
+
+/* ── 대시보드 ── */
+let dSid="s1";
+function tabs(){
+  const t=$("dtabs"); t.innerHTML="";
+  SESSIONS.filter(s=>s.id!=="s0").forEach(s=>{
+    const b=document.createElement("button");
+    b.className="tab"; b.setAttribute("aria-pressed",String(s.id===dSid));
+    b.innerHTML=s.d+"<small>"+s.p+"</small>";
+    b.onclick=()=>{dSid=s.id;tabs();watch();};
+    t.appendChild(b);
+  });
+}
+function openDash(){
+  if(offRoom) offRoom();
+  if(S.sid&&S.sid!=="s0") dSid=S.sid;
+  tabs(); show("v-dash"); watch();
+}
+$("toDash").onclick=e=>{e.preventDefault();openDash();};
+$("toDash2").onclick=openDash;
+$("d-back").onclick=()=>{ if(offRes)offRes(); show("v-home"); };
+$("d-reset").onclick=()=>{
+  if(!live) return;
+  if(!confirm(sesName(dSid)+" 분반의 기록과 진행판을 모두 삭제합니다.")) return;
+  remove(ref(db,`sessions/${dSid}`)).catch(fail);
+};
+function watch(){
+  if(offRes) offRes();
+  if(!live){ paint([]); $("d-stamp").textContent="미리보기 모드에서는 결과가 모이지 않습니다."; return; }
+  offRes=onValue(ref(db,`sessions/${dSid}/results`),s=>{
+    const v=s.val()||{}; paint(Object.keys(v).map(k=>v[k]));
+    const t=new Date();
+    $("d-stamp").textContent="갱신 "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2)+":"+("0"+t.getSeconds()).slice(-2)+" · 실시간";
+  });
+}
+function paint(rows){
+  rows.sort((a,b)=>b.score-a.score||b.correct-a.correct||a.elapsed-b.elapsed);
+  $("d-teams").textContent=rows.length;
+  $("d-avg").textContent=rows.length?(rows.reduce((s,r)=>s+r.correct,0)/rows.length).toFixed(1):"0";
+  $("d-best").textContent=rows.length?rows[0].score:"0";
+
+  const rk=$("d-rank");
+  if(!rows.length){ rk.innerHTML='<div class="empty">아직 제출한 모둠이 없습니다.<br>모둠이 제출하면 여기에 바로 올라옵니다.</div>'; }
+  else{
+    rk.innerHTML='<table><tr><th></th><th>모둠</th><th style="text-align:right">점수</th><th style="text-align:right">정답</th><th style="text-align:right">인원</th><th style="text-align:right">소요</th></tr>'
+      + rows.map((r,i)=>`<tr class="${i===0?"top":""}"><td class="rank">${i+1}</td><td>${r.team}모둠</td>`
+      + `<td class="num">${r.score}</td><td class="num">${r.correct}/${TOTAL}</td>`
+      + `<td class="num">${r.people||"-"}</td><td class="num">${mmss(r.elapsed)}</td></tr>`).join("")+'</table>';
+  }
+  const ms=$("d-miss");
+  if(!rows.length){ ms.innerHTML='<div class="empty">결과가 모이면 오답이 많은 카드부터 정리해 보여줍니다.</div>'; return; }
+  const st=CARDS.map(c=>{
+    let wrong=0; const dist={};
+    rows.forEach(r=>{ const a=(r.answers||{})[c.id];
+      if(a!==c.m){ wrong++; const k=a?a+"월":"미배치"; dist[k]=(dist[k]||0)+1; } });
+    return {c,wrong,rate:Math.round(wrong/rows.length*100),dist};
+  }).filter(x=>x.wrong>0).sort((a,b)=>b.wrong-a.wrong).slice(0,5);
+  ms.innerHTML = st.length ? st.map(x=>{
+    const d=Object.keys(x.dist).map(k=>k+" "+x.dist[k]+"개조").join(" · ");
+    return `<div class="miss"><div class="miss-h"><span class="miss-t">${x.c.t} <span style="color:var(--muted);font-weight:600">(${x.c.m}월)</span></span>`
+      + `<span class="miss-p">오답 ${x.rate}%</span></div><div class="meter"><i style="width:${x.rate}%"></i></div>`
+      + `<div class="miss-w">${d}<br>${x.c.w}</div></div>`;
+  }).join("") : '<div class="empty">모든 모둠이 전부 맞혔습니다.</div>';
+}
+</script>
+</body>
+</html>
